@@ -1,36 +1,26 @@
-#!/usr/bin/env python
-
-import rospy
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
+#!/usr/bin/env python3
+import rosy
 import cv2
 
-class CameraNode:
+class Camera_node:
     def __init__(self):
-        self.bridge = CvBridge()
-        rospy.init_node('open_camera_node', anonymous=True)
-        
-        # Subscribe to the raspicam image topic
-        self.image_sub = rospy.Subscriber("/raspicam_node/image", Image, self.image_callback)
-        
-        # Window for displaying the image
-        cv2.namedWindow("Raspberry Pi Camera", cv2.WINDOW_NORMAL)
-        
-    def image_callback(self, msg):
-        try:
-            # Convert the ROS Image message to OpenCV2 format
-            cv2_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        except CvBridgeError as e:
-            rospy.logerr("CvBridge Error: {0}".format(e))
-        else:
-            # Display the image
-            cv2.imshow('Raspberry Pi Camera', cv2_img)
-            cv2.waitKey(1)
-        
-    def spin(self):
-        rospy.spin()
+        rospy.init_node('camera', anonymous_=False)
+        self.vid = cv2.VideoCapture(0)
+
+
+    def main_control(self):
+
+        while(True):
+            ret, frame = self.vid.read()
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        self.vid.release()
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    camera_node = CameraNode()
-    camera_node.spin()
+    CN = Camera_node()
+    r = rospy.Rate(60)
+    while not rospy.is_shutdown():
+        CN.main_control()
+        r.sleep()
